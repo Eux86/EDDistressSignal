@@ -130,6 +130,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Server.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -174,6 +175,10 @@
     <ProjectReference Include="..\ClientModels\ClientModels.csproj">
       <Project>{be58413c-348e-4698-863a-6ab4ef2978b5}</Project>
       <Name>ClientModels</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EDLogReader\EDLogReader.csproj">
+      <Project>{716036f5-29f9-4005-92b4-f80a7d7df399}</Project>
+      <Name>EDLogReader</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

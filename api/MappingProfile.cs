@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using ClientModels;
 using Entities.Models;
 using System;
 using System.Collections.Generic;
@@ -13,10 +12,11 @@ namespace api
         public MappingProfile()
         {
             CreateMap<Models.DistressSignalModel, Entities.Models.DistressSignal>();
-            CreateMap<UpdateLocationMessage, Location>()
-                .ForMember(dest => dest.X, opt => opt.MapFrom(src => src.LocationX))
-                .ForMember(dest => dest.Y, opt => opt.MapFrom(src => src.LocationY))
-                .ForMember(dest => dest.Z, opt => opt.MapFrom(src => src.LocationZ));
+            CreateMap<ClientModels.Location, Location>()
+                .ForMember(dest => dest.X, opt => opt.MapFrom(src => src.StarPosX))
+                .ForMember(dest => dest.Y, opt => opt.MapFrom(src => src.StarPosY))
+                .ForMember(dest => dest.Z, opt => opt.MapFrom(src => src.StarPosZ))
+                .ForMember(dest => dest.SystemName, opt => opt.MapFrom(src => src.StarSystem));
         }
     }
 }

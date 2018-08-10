@@ -1,19 +1,7 @@
 ﻿using ClientModels;
-using Microsoft.AspNetCore.SignalR.Client;
+using EDLogReader;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ClientGUI
 {
@@ -22,68 +10,78 @@ namespace ClientGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private HubConnection _connection;
+        private Server _server;
+        private Reader _reader;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _connection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:59608/distress")
-            .Build();
+            try
+            {
+                _server = new Server();
+                _server.ApiKey = "26C314EB - 317A - 4EFA - A872 - 3A8000F83AFC";
+                _server.OnDistressSignal += server_OnDistressSignal;
+                _server.Connect();
+                Log("Connected");
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+            }
+
+            try
+            {
+                _reader = new EDLogReader.Reader();
+                _reader.updated += Reader_Updated;
+                _reader.StartMonitoring();
+                Log("Started LOG monitoring");
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+            }
+        }
+
+        private void server_OnDistressSignal(object sender, DistressSignalMessage e)
+        {
+            Log("DISTRESS SIGNAL RECEIVED! System: " + e.Location.StarSystem);
+        }
+
+        private async void Reader_Updated(object sender, EDLog e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                Console.WriteLine("Location updated: " + e.Location.StarSystem);
+                locX.Text = e.Location.StarPosX.ToString();
+                locY.Text = e.Location.StarPosY.ToString();
+                locZ.Text = e.Location.StarPosZ.ToString();
+                StarSystemName.Text = e.Location.StarSystem;
+            });
+            try
+            {
+                await _server.UpdatePlayerInfo(e);
+                Log("Sent updated player info");
+            } catch(Exception ex)
+            {
+                Log(ex.Message);
+            }
+
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                await _connection.InvokeAsync("SendDistressSignal","test1", "test2");
-            }
-            catch (Exception ex)
-            {
-                messagesList.Items.Add(ex.Message);
-            }
+            await _server.SendDistressSignal(_reader.Log);
         }
 
-        private async void connectButton_Click(object sender, RoutedEventArgs e)
+        private void Log(string message)
         {
-            _connection.On<string, string>("ReceiveDistressSignal", (user, message) =>
+            this.Dispatcher.Invoke(() =>
             {
-                this.Dispatcher.Invoke(() =>
-                {
-                    var newMessage = $"{user}: {message}";
-                    messagesList.Items.Add(newMessage);
-                });
+                messagesList.Items.Add(message);
             });
-
-            try
-            {
-                await _connection.StartAsync();
-                messagesList.Items.Add("Connection started");
-                connectButton.IsEnabled = false;
-                sendButton.IsEnabled = true;
-            }
-            catch (Exception ex)
-            {
-                messagesList.Items.Add(ex.Message);
-            }
         }
 
-        private async void UpdatePositionButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                UpdateLocationMessage message = new UpdateLocationMessage();
-                message.ApiKey = apiKey.Text;
-                message.LocationX = float.Parse(locX.Text);
-                message.LocationY = float.Parse(locY.Text);
-                message.LocationZ = float.Parse(locZ.Text);
-                await _connection.InvokeAsync("UpdateLocation", message);
-            }
-            catch (Exception ex)
-            {
-                messagesList.Items.Add(ex.Message);
-            }
-        }
+
     }
 }

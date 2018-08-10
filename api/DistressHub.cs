@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using BusinessLayer.Interfaces;
-using ClientModels;
 using Entities.Models;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -22,14 +21,14 @@ namespace api
             _locationService = locationService;
             _mapper = mapper;
         }
-        public async Task SendDistressSignal(string user, string message)
+        public async Task SendDistressSignal(ClientModels.DistressSignalMessage message)
         {
-            await Clients.Others.SendAsync("ReceiveDistressSignal", user, message);
+            await Clients.Others.SendAsync("ReceiveDistressSignal", message);
         }
 
-        public async Task UpdateLocation(UpdateLocationMessage message)
+        public async Task UpdatePlayerInfo(ClientModels.PlayerInfoMessage message)
         {
-            Location location = _mapper.Map<UpdateLocationMessage,Location>(message);
+            Location location = _mapper.Map<ClientModels.Location,Location>(message.Location);
             _locationService.UpdatePlayerLocationAsync(message.ApiKey, location);
         }
     }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ClientModels
 {
-    public class PlayerInfoMessage
+    public class DistressSignalMessage
     {
         public string ApiKey { get; set; }
         public Location Location { get; set; }

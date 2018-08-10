@@ -4,9 +4,8 @@ using System.Text;
 
 namespace ClientModels
 {
-    public class PlayerInfoMessage
+    public class EDLog
     {
-        public string ApiKey { get; set; }
         public Location Location { get; set; }
     }
 }
