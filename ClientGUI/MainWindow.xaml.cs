@@ -34,7 +34,7 @@ namespace ClientGUI
                 _reader.LocationUpdated += Reader_LocationUpdated;
                 _reader.PlayerInfoUpdated += reader_PlayerInfoUpdated;
                 await _reader.ForceRead();
-                await _server.LogInAsync(_reader.Log);
+                //await _server.LogInAsync(_reader.Log);
                 _reader.StartMonitoring();
                 Log("Started LOG monitoring");
             } else

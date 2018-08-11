@@ -21,12 +21,17 @@ namespace EDLogReader
         private DateTime _latestEventTime = DateTime.MinValue;
         private FileSystemWatcher _fileWatcher = new FileSystemWatcher();
 
+        private string _currentJournalFile;
+
         public Reader()
         {
             Log = new EDLog();
             _fileWatcher.Changed += fileWatcher_Changed;
+            _fileWatcher.Created += fileWatcher_Created;
             this._logDirectory = Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\";
         }
+
+        
 
         public void StartMonitoring()
         {
@@ -37,20 +42,33 @@ namespace EDLogReader
         public async Task ForceRead()
         {
             var directory = new DirectoryInfo(Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\");
-            var lastEditedJournal = directory.GetFiles("Journal.*").OrderByDescending(x => x.LastWriteTime).First();
-            await ReadAsync(lastEditedJournal.FullName);
+            _currentJournalFile = directory.GetFiles("Journal.*").OrderByDescending(x => x.LastWriteTime).First().FullName;
+            await ReadAsync();
         }
 
         private void fileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            ReadAsync(e.FullPath);
+            if (e.Name.StartsWith("Journal"))
+            {
+                _currentJournalFile = e.FullPath;
+                ReadAsync();
+            }
         }
 
-        private async Task ReadAsync(string logPath)
+        private void fileWatcher_Created(object sender, FileSystemEventArgs e)
+        {
+            if (e.Name.StartsWith("Journal"))
+            {
+                _currentJournalFile = e.FullPath;
+                ReadAsync();
+            }
+        }
+
+        private async Task ReadAsync()
         {
             await Task.Run(() =>
             {
-                using (var fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var fileStream = new FileStream(_currentJournalFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (StreamReader file = new StreamReader(fileStream))
                 using (JsonTextReader reader = new JsonTextReader(file))
                 {
