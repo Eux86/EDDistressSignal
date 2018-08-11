@@ -44,10 +44,13 @@ namespace api
             };
 
             var inRange = await _playerService.GetPlayersInRangeAsync(signal.SignalLocation, 100);
-            foreach (var contact in inRange)
+            if (inRange != null)
             {
-                if (contact.ApiKey != signal.Player.ApiKey) // Avoid sending the distress signal to the player who sent it
-                    await Clients.Client(contact.ConnectionId).SendAsync("DistressSignalReceived", newMessage);
+                foreach (var contact in inRange)
+                {
+                    if (contact.ApiKey != signal.Player.ApiKey) // Avoid sending the distress signal to the player who sent it
+                        await Clients.Client(contact.ConnectionId).SendAsync("DistressSignalReceived", newMessage);
+                }
             }
         }
 
@@ -68,7 +71,9 @@ namespace api
 
         public async void LogIn(ClientModels.LogInMessage message)
         {
-            var playerInfo = (IPlayerInfo)_mapper.Map<ClientModels.PlayerInfoMessage, IPlayerInfo>(message);
+            var clients = Clients;
+            var callerId = Context.ConnectionId;
+            var playerInfo = (IPlayerInfo)_mapper.Map<ClientModels.LogInMessage, IPlayerInfo>(message);
             playerInfo.ConnectionId = Context.ConnectionId;
             _playerService.UpdatePlayerInfo(playerInfo);
 
@@ -83,7 +88,7 @@ namespace api
             IEnumerable<IDistressSignal> signalsAnswered = await _distressSignalService.GetSignalsAnsweredByPlayerAsync(playerInfo);
             playerStatusMessage.AnsweredDistressSignals = _mapper.Map<IEnumerable<IDistressSignal>, List<ClientModels.DistressSignal>>(signalsAnswered);
 
-            await Clients.Caller.SendAsync("UpdatePlayerStatus", playerStatusMessage);
+            await clients.Client(callerId).SendAsync("UpdatePlayerStatus", playerStatusMessage);
         }
 
         public async void LogOut(string apiKey)

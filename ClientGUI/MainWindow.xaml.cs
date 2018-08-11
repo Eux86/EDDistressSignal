@@ -34,6 +34,7 @@ namespace ClientGUI
                 _reader.LocationUpdated += Reader_LocationUpdated;
                 _reader.PlayerInfoUpdated += reader_PlayerInfoUpdated;
                 await _reader.ForceRead();
+                await _server.LogInAsync(_reader.Log);
                 _reader.StartMonitoring();
                 Log("Started LOG monitoring");
             } else
@@ -85,7 +86,10 @@ namespace ClientGUI
             });
             try
             {
-                await _server.UpdatePlayerLocation(e);
+                if (_server.Connected)
+                {
+                    await _server.UpdatePlayerLocation(e);
+                }
                 Log("Sent updated player location");
             }
             catch (Exception ex)
@@ -99,7 +103,10 @@ namespace ClientGUI
         {
             try
             {
-                await _server.UpdatePlayerInfo(e);
+                if (_server.Connected)
+                {
+                    await _server.UpdatePlayerInfo(e);
+                }
                 Log("Sent updated player info");
             }
             catch (Exception ex)

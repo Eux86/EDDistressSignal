@@ -11,7 +11,7 @@ namespace Entities.Models
         public ILocation SignalLocation { get; set; }
         public DateTime Time { get; set; }
         public bool Answered { get; set; }
-        public IEnumerator<IPlayerInfo> PlayersAnswering { get; set; }
+        public IEnumerable<IPlayerInfo> PlayersAnswering { get; set; }
         public Guid Id { get; set; }
 
         public DistressSignal()

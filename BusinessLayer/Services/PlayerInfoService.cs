@@ -35,18 +35,21 @@ namespace BusinessLayer.Services
             }
             else
             {
-                Mapper.Map<IPlayerInfo, IPlayerInfo>(playerInfo, old);
-                old.Name = playerInfo.Name;
+                old.Location = playerInfo.Location != null ? playerInfo.Location : old.Location;
+                old.DistressSignals = playerInfo.DistressSignals!=null?playerInfo.DistressSignals:old.DistressSignals;
+                old.ShipType = playerInfo.ShipType != null ? playerInfo.ShipType : old.ShipType;
+                old.ApiKey = playerInfo.ApiKey != null ? playerInfo.ApiKey : old.ApiKey;
+                old.Name = playerInfo.Name != null ? playerInfo.Name : old.Name;
             }
 
         }
 
-        public Task<IEnumerable<IPlayerInfo>> GetPlayersInRangeAsync(ILocation center, int distance)
+        public async Task<IEnumerable<IPlayerInfo>> GetPlayersInRangeAsync(ILocation center, int distance)
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
 
-                var inRange = _players.Where(x => ClientModels.LocationHelper.Distance(
+                var inRange = _players.Where(x => x.Location!=null && ClientModels.LocationHelper.Distance(
                     new ClientModels.Location() { StarPosX = center.X, StarPosY = center.Y, StarPosZ = center.Z },
                     new ClientModels.Location() { StarPosX = x.Location.X, StarPosY = x.Location.Y, StarPosZ = x.Location.Z }
                     ) < distance);

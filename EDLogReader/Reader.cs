@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace EDLogReader
 {
@@ -24,7 +25,7 @@ namespace EDLogReader
         {
             Log = new EDLog();
             _fileWatcher.Changed += fileWatcher_Changed;
-            this._logDirectory = Environment.GetEnvironmentVariable("userprofile")+@"\Downloads\";
+            this._logDirectory = Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\";
         }
 
         public void StartMonitoring()
@@ -35,7 +36,9 @@ namespace EDLogReader
 
         public async Task ForceRead()
         {
-            await ReadAsync(@"C:\Users\eugenio.ditullio\Downloads\journal.txt");
+            var directory = new DirectoryInfo(Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\");
+            var lastEditedJournal = directory.GetFiles("Journal.*").OrderByDescending(x => x.LastWriteTime).First();
+            await ReadAsync(lastEditedJournal.FullName);
         }
 
         private void fileWatcher_Changed(object sender, FileSystemEventArgs e)
@@ -55,19 +58,20 @@ namespace EDLogReader
 
                     var jsonSerializer = new JsonSerializer();
                     DateTime newestEventTime = _latestEventTime;
+                    dynamic logEvent = null;
                     while (reader.Read())
                     {
-                        dynamic logEvent = jsonSerializer.Deserialize(reader);
+                        logEvent = jsonSerializer.Deserialize(reader);
 
                         if (_latestEventTime == null || logEvent.timestamp > _latestEventTime)
                         {
-                            _latestEventTime = logEvent.timestamp;
                             HandleLogEvent(logEvent);
                         }
                     }
+                    _latestEventTime = logEvent.timestamp;
                 }
             });
-            
+
         }
 
         private void HandleLogEvent(dynamic logEvent)
@@ -78,29 +82,29 @@ namespace EDLogReader
                 case "FSDJump":
                 case "Location":
 
+                    var newLocation = new Location()
+                    {
+                        StarSystem = logEvent.StarSystem,
+                        StarPosX = logEvent.StarPos[0],
+                        StarPosY = logEvent.StarPos[1],
+                        StarPosZ = logEvent.StarPos[2],
+                    };
+                    Log.Location = newLocation;
                     if (LocationUpdated != null)
                     {
-                        var newLocation = new Location()
-                        {
-                            StarSystem = logEvent.StarSystem,
-                            StarPosX = logEvent.StarPos[0],
-                            StarPosY = logEvent.StarPos[1],
-                            StarPosZ = logEvent.StarPos[2],
-                        };
-                        Log.Location = newLocation;
 
                         LocationUpdated(this, Log);
                     }
                     break;
                 case "LoadGame":
-                    if (PlayerInfoUpdated!=null)
+                    var newPlayerInfo = new Player()
                     {
-                        var newPlayerInfo = new Player()
-                        {
-                            Name = logEvent.Commander,
-                            ShipType = logEvent.Ship,
-                        };
-                        Log.Player = newPlayerInfo;
+                        Name = logEvent.Commander,
+                        ShipType = logEvent.Ship,
+                    };
+                    Log.Player = newPlayerInfo;
+                    if (PlayerInfoUpdated != null)
+                    {
                         PlayerInfoUpdated(this, Log);
                     }
                     break;

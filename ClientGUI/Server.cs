@@ -17,6 +17,7 @@ namespace ClientGUI
 
         public string ApiKey { get; set; }
         public PlayerStatus PlayerStatus { get; set; }
+        public bool Connected { get; internal set; }
 
         public Server()
         {
@@ -31,6 +32,7 @@ namespace ClientGUI
         private Task connection_Closed(Exception arg)
         {
             OnConnectionClosed?.Invoke(this, null);
+            Connected = false;
             return Task.CompletedTask;
         }
 
@@ -42,6 +44,7 @@ namespace ClientGUI
             });
 
             await _connection.StartAsync();
+            Connected = true;
         }
 
         internal async Task UpdatePlayerLocation(EDLog log)

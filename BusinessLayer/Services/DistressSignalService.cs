@@ -13,18 +13,15 @@ namespace BusinessLayer.Services
     {
         private List<IDistressSignal> _distressSignals = new List<IDistressSignal>();
 
-        private IPlayerInfoService _playerInfoService;
 
-        public DistressSignalService(
-            IPlayerInfoService playerInfoService
-         )
+        public DistressSignalService()
         {
-            _playerInfoService = playerInfoService;
         }
 
         public void AddDistressSignal(DistressSignal distressSignal)
         {
             _distressSignals.Add(distressSignal);
+            if (distressSignal.Player.DistressSignals == null) distressSignal.Player.DistressSignals = new List<IDistressSignal>();
             distressSignal.Player.DistressSignals.ToList().Add(distressSignal);
         }
 
@@ -38,6 +35,16 @@ namespace BusinessLayer.Services
             var toRemove = _distressSignals.Single(x => x.Id == signalId);
             _distressSignals.Remove(toRemove);
             toRemove.Player.DistressSignals.ToList().Remove(toRemove);
+        }
+
+        public async Task CancelDistressSignalAsync(IPlayerInfo player)
+        {
+            await Task.Run(() =>
+            {
+                var toRemove = _distressSignals.Single(x => x.Player.ApiKey == player.ApiKey);
+                _distressSignals.Remove(toRemove);
+                toRemove.Player.DistressSignals.ToList().Remove(toRemove);
+            });
         }
 
         public async Task<IEnumerable<IDistressSignal>> GetPlayersSignalAsyncs(IPlayerInfo playerInfo)
@@ -60,7 +67,7 @@ namespace BusinessLayer.Services
         {
             return await Task.Run(() =>
             {
-                return _distressSignals.Where(x => ClientModels.LocationHelper.Distance(
+                return _distressSignals.Where(x => x.SignalLocation!=null &&  ClientModels.LocationHelper.Distance(
                     new ClientModels.Location() { StarPosX = x.SignalLocation.X, StarPosY = x.SignalLocation.Y, StarPosZ = x.SignalLocation.Z },
                     new ClientModels.Location() { StarPosX = playerInfo.Location.X, StarPosY = playerInfo.Location.Y, StarPosZ = playerInfo.Location.Z }) 
                     < distance);

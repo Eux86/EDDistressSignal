@@ -35,7 +35,6 @@ namespace api
             services.AddSingleton<IPlayerAuthService, FakePlayerAuthService>();
             services.AddSingleton<IDistressSignalService, DistressSignalService>();
             services.AddSingleton<IPlayerInfoService, PlayerInfoService>();
-            services.AddScoped<IDistressSignalService, DistressSignalService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

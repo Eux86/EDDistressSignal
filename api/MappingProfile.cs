@@ -29,6 +29,11 @@ namespace api
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.ShipType, opt => opt.MapFrom(src => src.ShipType));
 
+            CreateMap<ClientModels.LogInMessage, IPlayerInfo>()
+                .ForMember(dest => dest.ApiKey, opt => opt.MapFrom(src => src.ApiKey))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.ShipType, opt => opt.MapFrom(src => src.ShipType));
+
         }
     }
 }
