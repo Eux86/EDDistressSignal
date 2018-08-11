@@ -33,7 +33,8 @@ namespace api
             services.AddSignalR();
 
             services.AddSingleton<IPlayerAuthService, FakePlayerAuthService>();
-            services.AddSingleton<ILocationService, LocationService>();
+            services.AddSingleton<IDistressSignalService, DistressSignalService>();
+            services.AddSingleton<IPlayerInfoService, PlayerInfoService>();
             services.AddScoped<IDistressSignalService, DistressSignalService>();
         }
 

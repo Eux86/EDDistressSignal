@@ -12,8 +12,10 @@
         <TextBox Name="locX" HorizontalAlignment="Left" Height="23" Margin="243,88,0,0" TextWrapping="Wrap" Text="-22.844" VerticalAlignment="Top" Width="51"/>
         <TextBox Name="locY" HorizontalAlignment="Left" Height="23" Margin="299,88,0,0" TextWrapping="Wrap" Text="36.531" VerticalAlignment="Top" Width="50" RenderTransformOrigin="0.497,0.555"/>
         <TextBox Name="locZ" HorizontalAlignment="Left" Height="23" Margin="349,88,0,0" TextWrapping="Wrap" Text="-1.188" VerticalAlignment="Top" Width="51"/>
-        <TextBox Name="apiKey" Height="23" TextWrapping="Wrap" Text="26C314EB - 317A - 4EFA - A872 - 3A8000F83AFC" VerticalAlignment="Top" Margin="10,10,10,0"/>
         <TextBox x:Name="StarSystemName" HorizontalAlignment="Left" Height="23" Margin="243,65,0,0" TextWrapping="Wrap" Text="Unknown" VerticalAlignment="Top" Width="157"/>
+        <TextBox IsEnabled="False" Name="apiKey" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="10,10,98,0"/>
+        <Button Name="apiKeyButton" IsEnabled="False" Content="Save" VerticalAlignment="Top" Margin="0,10,10,0" HorizontalAlignment="Right" Width="83" Click="apiKeyButton_Click"/>
+        <Button Name="manualPositionButton" Content="Manual Position" HorizontalAlignment="Left" VerticalAlignment="Top" Width="97" Margin="405,89,0,0" Click="manualPositionButton_Click"/>
 
     </Grid>
 </Window>

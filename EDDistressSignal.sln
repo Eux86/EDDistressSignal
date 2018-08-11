@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientGUI", "ClientGUI\Clie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientModels", "ClientModels\ClientModels.csproj", "{BE58413C-348E-4698-863A-6AB4EF2978B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EDLogReader", "EDLogReader\EDLogReader.csproj", "{716036F5-29F9-4005-92B4-F80A7D7DF399}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EDLogReader", "EDLogReader\EDLogReader.csproj", "{716036F5-29F9-4005-92B4-F80A7D7DF399}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

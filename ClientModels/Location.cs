@@ -7,9 +7,9 @@ namespace ClientModels
     public class Location
     {
         public string StarSystem { get; set; }
-        public float StarPosX { get; set; }
-        public float StarPosY { get; set; }
-        public float StarPosZ { get; set; }
+        public double StarPosX { get; set; }
+        public double StarPosY { get; set; }
+        public double StarPosZ { get; set; }
 
     }
 }

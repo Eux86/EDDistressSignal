@@ -7,10 +7,16 @@ namespace Entities.Models
 {
     public class DistressSignal : IDistressSignal
     {
-        public string Id { get; set; }
-        public string PlayerName { get; set; }
-        public ILocation Location { get; set; }
-        public string ShipType { get; set; }
+        public IPlayerInfo Player { get; set; }
+        public ILocation SignalLocation { get; set; }
+        public DateTime Time { get; set; }
+        public bool Answered { get; set; }
+        public IEnumerator<IPlayerInfo> PlayersAnswering { get; set; }
+        public Guid Id { get; set; }
 
+        public DistressSignal()
+        {
+            Id = new Guid();
+        }
     }
 }

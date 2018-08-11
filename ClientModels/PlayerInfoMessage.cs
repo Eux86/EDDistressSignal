@@ -4,9 +4,10 @@ using System.Text;
 
 namespace ClientModels
 {
-    public class SendDistressSignalMessage
+    public class PlayerInfoMessage
     {
         public string ApiKey { get; set; }
-        public Location Location { get; set; }
+        public string Name { get; set; }
+        public string ShipType { get; set; }
     }
 }

@@ -6,6 +6,8 @@ namespace ClientModels
 {
     public class EDLog
     {
+        public string ApiKey { get; set; }
         public Location Location { get; set; }
+        public Player Player { get; set; }
     }
 }

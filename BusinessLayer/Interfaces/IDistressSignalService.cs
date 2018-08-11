@@ -7,6 +7,8 @@ namespace BusinessLayer.Interfaces
 {
     public interface IDistressSignalService
     {
-        string CreateNewDistressSignal(DistressSignal distressSignal);
+        void AddDistressSignal(DistressSignal distressSignal);
+        void CancelDistressSignal(Guid signalId);
+
     }
 }

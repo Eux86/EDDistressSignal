@@ -10,7 +10,8 @@ namespace ClientGUI
 {
     public class Server
     {
-        public event EventHandler<DistressSignalMessage> OnDistressSignal;
+        public event EventHandler<DistressSignalReceivedMessage> OnDistressSignal;
+        public event EventHandler OnConnectionClosed;
 
         private HubConnection _connection;
 
@@ -19,14 +20,22 @@ namespace ClientGUI
         public Server()
         {
             _connection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:59608/distress")
+            //.WithUrl("http://eddistress.azurewebsites.net/distress")
+            .WithUrl("http://localhost:30303/distress")
             .Build();
 
+            _connection.Closed += connection_Closed;
+        }
+
+        private Task connection_Closed(Exception arg)
+        {
+            OnConnectionClosed?.Invoke(this, null);
+            return Task.CompletedTask;
         }
 
         public async Task Connect()
         {
-            _connection.On<DistressSignalMessage>("ReceiveDistressSignal", (message) =>
+            _connection.On<DistressSignalReceivedMessage>("DistressSignalReceived", (message) =>
             {
                 OnDistressSignal?.Invoke(this, message);
             });
@@ -34,17 +43,26 @@ namespace ClientGUI
             await _connection.StartAsync();
         }
 
+        internal async Task UpdatePlayerLocation(EDLog log)
+        {
+            PlayerLocationMessage message = new PlayerLocationMessage();
+            message.ApiKey = ApiKey;
+            message.Location = log.Location;
+            await _connection.InvokeAsync("UpdatePlayerLocation", message);
+        }
+
         internal async Task UpdatePlayerInfo(EDLog log)
         {
             PlayerInfoMessage message = new PlayerInfoMessage();
             message.ApiKey = ApiKey;
-            message.Location = log.Location;
+            message.Name = log.Player.Name;
+            message.ShipType = log.Player.ShipType;
             await _connection.InvokeAsync("UpdatePlayerInfo", message);
         }
 
         internal async Task SendDistressSignal(EDLog log)
         {
-            DistressSignalMessage message = new DistressSignalMessage();
+            SendDistressSignalMessage message = new SendDistressSignalMessage();
             message.ApiKey = ApiKey;
             message.Location = log.Location;
             await _connection.InvokeAsync("SendDistressSignal", message);
