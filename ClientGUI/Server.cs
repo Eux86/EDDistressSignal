@@ -16,13 +16,14 @@ namespace ClientGUI
         private HubConnection _connection;
 
         public string ApiKey { get; set; }
+        public PlayerStatus PlayerStatus { get; set; }
 
         public Server()
         {
             _connection = new HubConnectionBuilder()
-            //.WithUrl("http://eddistress.azurewebsites.net/distress")
-            .WithUrl("http://localhost:30303/distress")
-            .Build();
+                //.WithUrl("http://eddistress.azurewebsites.net/distress")
+                .WithUrl("http://localhost:30303/distress")
+                .Build();
 
             _connection.Closed += connection_Closed;
         }
@@ -66,6 +67,26 @@ namespace ClientGUI
             message.ApiKey = ApiKey;
             message.Location = log.Location;
             await _connection.InvokeAsync("SendDistressSignal", message);
+        }
+
+        internal async Task LogInAsync(EDLog log)
+        {
+            LogInMessage message = new LogInMessage();
+            message.ApiKey = ApiKey;
+            message.Name = log.Player.Name;
+            message.ShipType = log.Player.ShipType;
+            await _connection.InvokeAsync("LogIn", message);
+        }
+
+        internal async Task LogOutAsync(string apiKey)
+        {
+            await _connection.InvokeAsync("LogOut", ApiKey);
+        }
+
+        internal async Task UpdatePlayerStatus(PlayerStatusMessage playerStatusMessage)
+        {
+            //ToDO
+            throw new NotImplementedException();
         }
     }
 }

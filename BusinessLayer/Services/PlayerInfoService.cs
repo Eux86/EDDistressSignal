@@ -7,16 +7,18 @@ using System.Linq;
 using Entities.Models;
 using AutoMapper;
 using System.Threading.Tasks;
-using ClientModels;
 
 namespace BusinessLayer.Services
 {
     public class PlayerInfoService : IPlayerInfoService
     {
         List<IPlayerInfo> _players = new List<IPlayerInfo>();
+        private IDistressSignalService _distressSignalService;
 
-        public PlayerInfoService()
+        public PlayerInfoService(
+            IDistressSignalService distressSignalService)
         {
+            _distressSignalService = distressSignalService;
         }
 
         public IPlayerInfo GetPlayerInfoByApiKey(string apiKey)
@@ -27,10 +29,11 @@ namespace BusinessLayer.Services
         public void UpdatePlayerInfo(IPlayerInfo playerInfo)
         {
             var old = _players.SingleOrDefault(x => x.ApiKey == playerInfo.ApiKey);
-            if (old==null)
+            if (old == null)
             {
                 _players.Add(playerInfo);
-            } else
+            }
+            else
             {
                 Mapper.Map<IPlayerInfo, IPlayerInfo>(playerInfo, old);
                 old.Name = playerInfo.Name;
@@ -42,8 +45,8 @@ namespace BusinessLayer.Services
         {
             return Task.Run(() =>
             {
-                
-                var inRange = _players.Where(x => LocationHelper.Distance(
+
+                var inRange = _players.Where(x => ClientModels.LocationHelper.Distance(
                     new ClientModels.Location() { StarPosX = center.X, StarPosY = center.Y, StarPosZ = center.Z },
                     new ClientModels.Location() { StarPosX = x.Location.X, StarPosY = x.Location.Y, StarPosZ = x.Location.Z }
                     ) < distance);
@@ -51,5 +54,14 @@ namespace BusinessLayer.Services
             });
         }
 
+        public async Task DisconnectPlayerAsync(string apiKey)
+        {
+            var playerToDelete = await Task.Run(() =>
+            {
+                return _players.Single(x => x.ApiKey == apiKey);
+            });
+            await _distressSignalService.CancelDistressSignalAsync(playerToDelete);
+            _players.Remove(playerToDelete);
+        }
     }
 }

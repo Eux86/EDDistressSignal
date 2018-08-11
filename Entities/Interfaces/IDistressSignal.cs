@@ -10,7 +10,7 @@ namespace Entities.Interfaces
         ILocation SignalLocation { get; set; }
         DateTime Time { get; set; }
         bool Answered { get; set; }
-        IEnumerator<IPlayerInfo> PlayersAnswering { get; set; }
+        IEnumerable<IPlayerInfo> PlayersAnswering { get; set; }
         Guid Id { get; set; }
 
     }

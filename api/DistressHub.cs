@@ -65,5 +65,30 @@ namespace api
             playerInfo.ConnectionId = Context.ConnectionId;
             _playerService.UpdatePlayerInfo(playerInfo);
         }
+
+        public async void LogIn(ClientModels.LogInMessage message)
+        {
+            var playerInfo = (IPlayerInfo)_mapper.Map<ClientModels.PlayerInfoMessage, IPlayerInfo>(message);
+            playerInfo.ConnectionId = Context.ConnectionId;
+            _playerService.UpdatePlayerInfo(playerInfo);
+
+            var playerStatusMessage = new ClientModels.PlayerStatusMessage();
+
+            var playersSignals = await _distressSignalService.GetPlayersSignalAsyncs(playerInfo);
+            playerStatusMessage.OwnDistressSignals = _mapper.Map<IEnumerable<IDistressSignal>,List<ClientModels.DistressSignal>>(playersSignals);
+
+            IEnumerable<IDistressSignal> signalsInRangeOfPlayer = await _distressSignalService.GetSignalsInRangeOfPlayerAsync(playerInfo, 100);
+            playerStatusMessage.OtherDistressSignals = _mapper.Map<IEnumerable<IDistressSignal>, List<ClientModels.DistressSignal>>(signalsInRangeOfPlayer);
+
+            IEnumerable<IDistressSignal> signalsAnswered = await _distressSignalService.GetSignalsAnsweredByPlayerAsync(playerInfo);
+            playerStatusMessage.AnsweredDistressSignals = _mapper.Map<IEnumerable<IDistressSignal>, List<ClientModels.DistressSignal>>(signalsAnswered);
+
+            await Clients.Caller.SendAsync("UpdatePlayerStatus", playerStatusMessage);
+        }
+
+        public async void LogOut(string apiKey)
+        {
+            await _playerService.DisconnectPlayerAsync(apiKey);
+        }
     }
 }

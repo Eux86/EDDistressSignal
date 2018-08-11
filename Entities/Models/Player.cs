@@ -12,6 +12,6 @@ namespace Entities.Models
         public ILocation Location { get; set; }
         public string ConnectionId { get; set; }
         public string ShipType { get; set; }
-
+        public IEnumerable<IDistressSignal> DistressSignals { get; set; }
     }
 }

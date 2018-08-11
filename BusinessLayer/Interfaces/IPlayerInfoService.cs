@@ -11,5 +11,6 @@ namespace BusinessLayer.Interfaces
         void UpdatePlayerInfo(IPlayerInfo playerInfo);
         IPlayerInfo GetPlayerInfoByApiKey(string apiKey);
         Task<IEnumerable<IPlayerInfo>> GetPlayersInRangeAsync(ILocation center, int distance);
+        Task DisconnectPlayerAsync(string apiKey);
     }
 }
