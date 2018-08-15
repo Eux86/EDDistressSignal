@@ -12,6 +12,8 @@ namespace EDLogReader
     // reads the log file and fires events for each new event found in the log since last reading
     public class Reader
     {
+        public event EventHandler<string> JournalFileSelected;
+
         public event EventHandler<EDLog> LocationUpdated;
         public event EventHandler<EDLog> PlayerInfoUpdated;
         public EDLog Log { get; private set; }
@@ -28,10 +30,37 @@ namespace EDLogReader
             Log = new EDLog();
             _fileWatcher.Changed += fileWatcher_Changed;
             _fileWatcher.Created += fileWatcher_Created;
+            _fileWatcher.NotifyFilter = NotifyFilters.LastAccess |
+                         NotifyFilters.LastWrite |
+                         NotifyFilters.FileName |
+                         NotifyFilters.DirectoryName;
             this._logDirectory = Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\";
+
+            StartTicking();
         }
 
-        
+        /// <summary>
+        /// Forces windows file system handler to fire the FileWatcher events
+        /// </summary>
+        private void StartTicking()
+        {
+            var myTimer = new System.Timers.Timer();
+            // Tell the timer what to do when it elapses
+            myTimer.Elapsed += delegate (object sender, System.Timers.ElapsedEventArgs e)
+            {
+                if (_currentJournalFile != null)
+                {
+                    using (FileStream fs = new FileStream(_currentJournalFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        fs.ReadByte();
+                    }
+                }
+            };
+            // Set it to go off every five seconds
+            myTimer.Interval = 5000;
+            // And start it        
+            myTimer.Enabled = true;
+        }
 
         public void StartMonitoring()
         {
@@ -43,6 +72,7 @@ namespace EDLogReader
         {
             var directory = new DirectoryInfo(Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\");
             _currentJournalFile = directory.GetFiles("Journal.*").OrderByDescending(x => x.LastWriteTime).First().FullName;
+            JournalFileSelected?.Invoke(this, _currentJournalFile);
             await ReadAsync();
         }
 
@@ -60,6 +90,7 @@ namespace EDLogReader
             if (e.Name.StartsWith("Journal"))
             {
                 _currentJournalFile = e.FullPath;
+                JournalFileSelected?.Invoke(this, _currentJournalFile);
                 ReadAsync();
             }
         }
@@ -81,12 +112,13 @@ namespace EDLogReader
                     {
                         logEvent = jsonSerializer.Deserialize(reader);
 
-                        if (_latestEventTime == null || logEvent.timestamp > _latestEventTime)
+                        if (logEvent!=null && (_latestEventTime == null || logEvent.timestamp > _latestEventTime))
                         {
                             HandleLogEvent(logEvent);
                         }
                     }
-                    _latestEventTime = logEvent.timestamp;
+                    if (logEvent!=null)
+                        _latestEventTime = logEvent.timestamp;
                 }
             });
 

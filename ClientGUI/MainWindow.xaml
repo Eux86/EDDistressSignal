@@ -33,6 +33,7 @@
             <Label Content="Answered Distress Signals" Grid.Row="2"/>
             <ListBox Name="answeredSignalsList" Margin="10,29,10,10" Grid.Row="2" />
         </Grid>
+        <TextBox IsEnabled="False" x:Name="journalFilePath" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="10,38,98,0"/>
 
     </Grid>
 </Window>

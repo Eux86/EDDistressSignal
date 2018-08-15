@@ -33,6 +33,7 @@ namespace ClientGUI
                 _reader = new Reader();
                 _reader.LocationUpdated += Reader_LocationUpdated;
                 _reader.PlayerInfoUpdated += reader_PlayerInfoUpdated;
+                _reader.JournalFileSelected += reader_JournalFileSelected;
                 await _reader.ForceRead();
                 //await _server.LogInAsync(_reader.Log);
                 _reader.StartMonitoring();
@@ -44,6 +45,24 @@ namespace ClientGUI
                 apiKeyButton.IsEnabled = true;
             }
 
+            KeyboardHandler keyboardHandler = new KeyboardHandler(this);
+            keyboardHandler.SendDistressSignalKeyPressed += KeyboardHandler_SendDistressSignalKeyPressed;
+
+        }
+
+        private async void KeyboardHandler_SendDistressSignalKeyPressed(object sender, EventArgs e)
+        {
+            Log("Send distress signal pressed!");
+            await _reader.ForceRead();
+            await _server.SendDistressSignal(_reader.Log);
+        }
+
+        private void reader_JournalFileSelected(object sender, string e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                journalFilePath.Text = e;
+            });
         }
 
         private async Task ConnectToServer()
