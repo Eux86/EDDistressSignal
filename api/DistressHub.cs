@@ -52,6 +52,8 @@ namespace api
                         await Clients.Client(contact.ConnectionId).SendAsync("DistressSignalReceived", newMessage);
                 }
             }
+
+            await Clients.Caller.SendAsync("DistressSignalCreated", newMessage);
         }
 
         public void UpdatePlayerLocation(ClientModels.PlayerLocationMessage message)

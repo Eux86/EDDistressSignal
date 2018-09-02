@@ -32,9 +32,10 @@ namespace api
             services.AddAutoMapper();
             services.AddSignalR();
 
-            services.AddSingleton<IPlayerAuthService, FakePlayerAuthService>();
-            services.AddSingleton<IDistressSignalService, DistressSignalService>();
+            services.AddScoped<IPlayerAuthService, FakePlayerAuthService>();
+
             services.AddSingleton<IPlayerInfoService, PlayerInfoService>();
+            services.AddSingleton<IDistressSignalService, DistressSignalService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

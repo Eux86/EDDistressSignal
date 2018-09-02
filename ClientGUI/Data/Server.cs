@@ -6,11 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClientGUI
+namespace ClientGUI.Data
 {
     public class Server
     {
         public event EventHandler<DistressSignalReceivedMessage> OnDistressSignal;
+        public event EventHandler<DistressSignalReceivedMessage> DistressSignalCreated;
         public event EventHandler OnConnectionClosed;
 
         private HubConnection _connection;
@@ -43,32 +44,37 @@ namespace ClientGUI
                 OnDistressSignal?.Invoke(this, message);
             });
 
+            _connection.On<DistressSignalReceivedMessage>("DistressSignalCreated", (message) =>
+            {
+                DistressSignalCreated?.Invoke(this, message);
+            });
+
             await _connection.StartAsync();
             Connected = true;
         }
 
-        internal async Task UpdatePlayerLocation(EDLog log)
+        internal async Task UpdatePlayerLocationAsync(Location location)
         {
             PlayerLocationMessage message = new PlayerLocationMessage();
             message.ApiKey = ApiKey;
-            message.Location = log.Location;
+            message.Location = location;
             await _connection.InvokeAsync("UpdatePlayerLocation", message);
         }
 
-        internal async Task UpdatePlayerInfo(EDLog log)
+        internal async Task UpdatePlayerInfoAsync(Player player)
         {
             PlayerInfoMessage message = new PlayerInfoMessage();
             message.ApiKey = ApiKey;
-            message.Name = log.Player.Name;
-            message.ShipType = log.Player.ShipType;
+            message.Name = player.Name;
+            message.ShipType = player.ShipType;
             await _connection.InvokeAsync("UpdatePlayerInfo", message);
         }
 
-        internal async Task SendDistressSignal(EDLog log)
+        internal async Task SendDistressSignalAsync(Location location)
         {
             SendDistressSignalMessage message = new SendDistressSignalMessage();
             message.ApiKey = ApiKey;
-            message.Location = log.Location;
+            message.Location = location;
             await _connection.InvokeAsync("SendDistressSignal", message);
         }
 

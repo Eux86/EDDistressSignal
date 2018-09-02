@@ -1,143 +1,92 @@
-﻿using ClientModels;
-using EDLogReader;
+﻿using ClientGUI.Services;
+using ClientGUI.VM;
+using ClientModels;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace ClientGUI
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private Server _server;
-        private Reader _reader;
+        private EdLogService _edLogService;
+        private ServerService _serverService;
+        private MainWindowViewModel _model;
 
-        public MainWindow()
+        public MainWindow(ServerService serverService, EdLogService edLogService)
         {
             InitializeComponent();
-            Initialization();
-        }
-
-        private async void Initialization()
-        {
 #if DEBUG
             Properties.Settings.Default.ApiKey = Guid.NewGuid().ToString();
 #endif
 
-            apiKey.Text = Properties.Settings.Default.ApiKey;
-            if (!string.IsNullOrEmpty(Properties.Settings.Default.ApiKey))
-            {
-                await ConnectToServer();
-                _reader = new Reader();
-                _reader.LocationUpdated += Reader_LocationUpdated;
-                _reader.PlayerInfoUpdated += reader_PlayerInfoUpdated;
-                _reader.JournalFileSelected += reader_JournalFileSelected;
-                await _reader.ForceRead();
-                //await _server.LogInAsync(_reader.Log);
-                _reader.StartMonitoring();
-                Log("Started LOG monitoring");
-            } else
-            {
-                Log("Configure your API KEY before continuing");
-                apiKey.IsEnabled = true;
-                apiKeyButton.IsEnabled = true;
-            }
+            _model = this.DataContext as MainWindowViewModel;
 
+            _edLogService = edLogService;
+            _edLogService.JournalFileSelected += edLogService_JournalFileSelected;
+            _edLogService.LocationUpdate += edLogService_LocationUpdate;
+
+            _serverService = serverService;
+
+            _serverService.DistressSignalReceived += _serverService_DistressSignalReceived;
+            _serverService.DistressSignalCreated += serverService_DistressSignalCreated;
+            _serverService.Connected += serverService_Connected;
+
+            _serverService.Connect();
+
+            StartKeyInterceptor();
+        }
+
+        private void edLogService_LocationUpdate(object sender, Location e)
+        {
+            _model.CurrentLocation = e;
+        }
+
+        private void serverService_Connected(object sender, EventArgs e)
+        {
+            Log("Connected");
+        }
+
+        #region reader events
+        private void edLogService_JournalFileSelected(object sender, string e)
+        {
+            _model.CurrentJournalFilePath = e;
+        }
+        #endregion
+
+        #region Server events
+        private void serverService_DistressSignalCreated(object sender, DistressSignal e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                _model.SentDistressSignals.Add(e);
+            });
+        }
+
+        private void _serverService_DistressSignalReceived(object sender, DistressSignal distressSignal)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                _model.ReceivedDistressSignals.Add(distressSignal);
+            });
+        }
+
+        #endregion
+
+        #region Keyboard interceptor
+        private void StartKeyInterceptor()
+        {
             KeyboardHandler keyboardHandler = new KeyboardHandler(this);
             keyboardHandler.SendDistressSignalKeyPressed += KeyboardHandler_SendDistressSignalKeyPressed;
-
         }
 
         private async void KeyboardHandler_SendDistressSignalKeyPressed(object sender, EventArgs e)
         {
             Log("Send distress signal pressed!");
-            await _reader.ForceRead();
-            await _server.SendDistressSignal(_reader.Log);
+            await _serverService.SendDistressSignalAsync();
+            
         }
-
-        private void reader_JournalFileSelected(object sender, string e)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                journalFilePath.Text = e;
-            });
-        }
-
-        private async Task ConnectToServer()
-        {
-            try
-            {
-                _server = new Server();
-                _server.ApiKey = Properties.Settings.Default.ApiKey;
-                _server.OnDistressSignal += server_OnDistressSignal;
-                _server.OnConnectionClosed += server_OnConnectionClosed;
-                Log("Connecting");
-                await _server.Connect();
-                Log("Connected");
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-            }
-        }
-
-        private void server_OnConnectionClosed(object sender, EventArgs e)
-        {
-            Log("Connecion closed");
-        }
-
-        private void server_OnDistressSignal(object sender, DistressSignalReceivedMessage e)
-        {
-            Log($"DISTRESS SIGNAL DETECTED! Cmdr {e.PlayerName} in System {e.Location.StarSystem} at {LocationHelper.Distance(_reader.Log.Location,e.Location)}Ly from current position");
-        }
-
-        private async void Reader_LocationUpdated(object sender, EDLog e)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                Console.WriteLine("Location updated: " + e.Location.StarSystem);
-                locX.Text = e.Location.StarPosX.ToString();
-                locY.Text = e.Location.StarPosY.ToString();
-                locZ.Text = e.Location.StarPosZ.ToString();
-                StarSystemName.Text = e.Location.StarSystem;
-            });
-            try
-            {
-                if (_server.Connected)
-                {
-                    await _server.UpdatePlayerLocation(e);
-                }
-                Log("Sent updated player location");
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-            }
-
-        }
-
-        private async void reader_PlayerInfoUpdated(object sender, EDLog e)
-        {
-            try
-            {
-                if (_server.Connected)
-                {
-                    await _server.UpdatePlayerInfo(e);
-                }
-                Log("Sent updated player info");
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-            }
-        }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            await _server.SendDistressSignal(_reader.Log);
-        }
+        #endregion
 
         private void Log(string message)
         {
@@ -147,21 +96,24 @@ namespace ClientGUI
             });
         }
 
+        #region GUI Actions
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            await _serverService.SendDistressSignalAsync();
+        }
+
         private void apiKeyButton_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.ApiKey = apiKey.Text;
             Properties.Settings.Default.Save();
             apiKey.IsEnabled = false;
             apiKeyButton.IsEnabled = false;
-            Initialization();
+            //Initialization();
         }
 
-        private async void manualPositionButton_Click(object sender, RoutedEventArgs e)
-        {
-            _reader.Log.Location.StarPosX = float.Parse(locX.Text);
-            _reader.Log.Location.StarPosY = float.Parse(locY.Text);
-            _reader.Log.Location.StarPosZ = float.Parse(locZ.Text);
-            await _server.UpdatePlayerLocation(_reader.Log);
-        }
+        #endregion
+
+
     }
 }

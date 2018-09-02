@@ -16,6 +16,10 @@ namespace EDLogReader
 
         public event EventHandler<EDLog> LocationUpdated;
         public event EventHandler<EDLog> PlayerInfoUpdated;
+
+        private bool _isLocationChanged = false;
+        private bool _isPlayerInfoChanged = false;
+
         public EDLog Log { get; private set; }
 
         private string _logDirectory = @"";
@@ -35,8 +39,6 @@ namespace EDLogReader
                          NotifyFilters.FileName |
                          NotifyFilters.DirectoryName;
             this._logDirectory = Environment.GetEnvironmentVariable("userprofile") + @"\Saved Games\Frontier Developments\Elite Dangerous\";
-
-            StartTicking();
         }
 
         /// <summary>
@@ -62,10 +64,12 @@ namespace EDLogReader
             myTimer.Enabled = true;
         }
 
-        public void StartMonitoring()
+        public void Start()
         {
             _fileWatcher.Path = _logDirectory;
             _fileWatcher.EnableRaisingEvents = true;
+            StartTicking();
+            ForceRead();
         }
 
         public async Task ForceRead()
@@ -120,6 +124,17 @@ namespace EDLogReader
                     if (logEvent!=null)
                         _latestEventTime = logEvent.timestamp;
                 }
+                // Fire events for new information
+                if (_isPlayerInfoChanged)
+                {
+                    PlayerInfoUpdated?.Invoke(this, Log);
+                    _isPlayerInfoChanged = false;
+                }
+                if (_isLocationChanged)
+                {
+                    LocationUpdated?.Invoke(this, Log);
+                    _isLocationChanged = false;
+                }
             });
 
         }
@@ -140,11 +155,7 @@ namespace EDLogReader
                         StarPosZ = logEvent.StarPos[2],
                     };
                     Log.Location = newLocation;
-                    if (LocationUpdated != null)
-                    {
-
-                        LocationUpdated(this, Log);
-                    }
+                    _isLocationChanged = true;
                     break;
                 case "LoadGame":
                     var newPlayerInfo = new Player()
@@ -153,10 +164,7 @@ namespace EDLogReader
                         ShipType = logEvent.Ship,
                     };
                     Log.Player = newPlayerInfo;
-                    if (PlayerInfoUpdated != null)
-                    {
-                        PlayerInfoUpdated(this, Log);
-                    }
+                    _isPlayerInfoChanged = true;
                     break;
             }
         }

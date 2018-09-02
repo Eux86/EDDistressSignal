@@ -130,8 +130,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Services\EdLogService.cs" />
+    <Compile Include="App.cs" />
     <Compile Include="KeyboardHandler.cs" />
-    <Compile Include="Server.cs" />
+    <Compile Include="PlayerStateModel.cs" />
+    <Compile Include="Data\Server.cs" />
+    <Compile Include="Services\LogsServices.cs" />
+    <Compile Include="Services\ServerService.cs" />
+    <Compile Include="VM\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
